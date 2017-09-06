@@ -32,14 +32,14 @@ void setup() {
 }
 
 void draw () {
+  // Kinect Image Draw infrared 
+  PImage info = kinect.getInfraredImage();
+  scale(2.0);
+  image(info, 125, 0);
+  
   // Back Black Jack
   background(0);
   fill(255);
-  
-  // Kinect Image Draw infrared 
-  PImage info = kinect.getInfraredImage();
-  scale(2.5);
-  image(info, 125, 0);
   
   kinect.generateFaceData();
   getFaceMapInfraredData();
@@ -86,7 +86,7 @@ void draw () {
       for (int j = 0; j < facePointsInfrared.length; j++) {
         //obtain the position of the nose
         if (j == KinectPV2.Face_Nose)
-          faces.add(new PVector(facePointsInfrared[j].x +125, facePointsInfrared[j].y));
+          faces.add(new PVector(facePointsInfrared[j].x +60, facePointsInfrared[j].y));
       }
     }
   }
