@@ -9,22 +9,22 @@ import KinectPV2.*;
 
 // Global Variables
 KinectPV2 kinect;
-static enum State {
+static enum States {
   DEMO,
   LIVE,
   RECORD,
   PLAY,
   PLAYING;
 }
-
-State state = State.LIVE;
+float esRad = 60.0;
+ArrayList<PVector> demoArray = new ArrayList<PVector>();
+States state = States.LIVE;
 
 
 void setup() {
   //Platform Setup
   fullScreen(P3D, 1);
-  
-  //State Setup
+  //size(400, 400);
   
   //Kinect Setup
   kinect = new KinectPV2(this);
@@ -38,45 +38,78 @@ void setup() {
 }
 
 void draw() {
+  //Frame Setup
+  background(0);
+  pushMatrix(); // Centre Screen
+  
   switch(state) {
     case DEMO: 
-    case LIVE: 
-    case RECORD: 
-    case PLAY: 
-    case PLAYING:
-     print("Live");
-  }
-  background(0);
-  pushMatrix(); //translate the scene to the center 
-     ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();  //get the skeletons as an Arraylist of KSkeletons
-        //individual joints
-        for (int i = 0; i < skeletonArray.size(); i++) {
-          KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-        //if the skeleton is being tracked compute the skleton joints
+      fill(255, 255, 255);
+      for(PVector point : demoArray){
+        ellipse(point.x, point.y, esRad,esRad);
+      }
+      ellipse(mouseX, mouseY, esRad,esRad);
+      break;
+    case LIVE:
+      ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();  //get the skeletons as an Arraylist of KSkeletons
+      //individual joints
+      for (int i = 0; i < skeletonArray.size(); i++) {
+        KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
         if (skeleton.isTracked()) {
           KJoint[] joints = skeleton.getJoints();
-            color col  = skeleton.getIndexColor();
-              fill(255, 255, 255);
-              stroke(col);
-              drawBody(joints);
-             drawHandState(joints[KinectPV2.JointType_HandRight]);
-             drawHandState(joints[KinectPV2.JointType_HandLeft]);
-            }
-          }
-popMatrix();
-fill(255, 0, 0);
+          color col  = skeleton.getIndexColor();
+          fill(255, 255, 255);
+          stroke(col);
+          drawBody(joints);
+          drawHandState(joints[KinectPV2.JointType_HandRight]);
+          drawHandState(joints[KinectPV2.JointType_HandLeft]);
+        }
+      }
+      break;
+    case RECORD: 
+     //print("Record");
+      break;
+    case PLAY: 
+     //print("Play");
+      break;
+    case PLAYING:
+     //print("Playing");
+      break;
+  }
+  popMatrix();
+  fill(255, 0, 0);
 }
 
+public void keyPressed()
+{
+  if (key == 'd'){
+    state = States.DEMO;
+  }
+  else if (key == 'l'){
+    state = States.LIVE;
+  }
+  else if (key == 'r'){
+    state = States.RECORD;
+  }
+  else if (key == 'p'){
+    state = States.PLAY;
+  }
+  else if (key == 's'){
+    state = States.LIVE;
+  } 
+}
 
+void mouseClicked() {
+  if(state == States.DEMO) {
+    demoArray.add(new PVector(mouseX, mouseY));
+  }
+}
 
 // Kinect Methods
-
-//draw the body
-void drawBody(KJoint[] joints) 
-  {
+void drawBody(KJoint[] joints) {
   drawBone(joints, KinectPV2.JointType_HandRight, KinectPV2.JointType_HandRight);
   drawBone(joints, KinectPV2.JointType_Head, KinectPV2.JointType_Head);
-  }
+}
 
 //draw two joints
 void drawBone(KJoint[] joints, int jointType1, int jointType2) {
