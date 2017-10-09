@@ -7,28 +7,46 @@ import java.util.ArrayList;
 import KinectPV2.KJoint;
 import KinectPV2.*;
 
+// Global Variables
 KinectPV2 kinect;
+static enum State {
+  DEMO,
+  LIVE,
+  RECORD,
+  PLAY,
+  PLAYING;
+}
+
+State state = State.LIVE;
 
 
 void setup() {
- //size(800, 600, P3D);
- fullScreen(P3D, 1);
+  //Platform Setup
+  fullScreen(P3D, 1);
+  
+  //State Setup
+  
+  //Kinect Setup
   kinect = new KinectPV2(this);
-
-  //Enables depth and Body tracking (mask image)
   kinect.enableDepthMaskImg(true);
   kinect.enableSkeletonDepthMap(true);
   kinect.enableSkeletonColorMap(true);
   kinect.enableColorImg(true);
   kinect.init();
+  
+  
 }
 
 void draw() {
+  switch(state) {
+    case DEMO: 
+    case LIVE: 
+    case RECORD: 
+    case PLAY: 
+    case PLAYING:
+     print("Live");
+  }
   background(0);
-
-  //image(kinect.getDepthMaskImage(), 0, 0, width, height);
-  //image(kinect.getColorImage(), 0, 0, width, height);
-
   pushMatrix(); //translate the scene to the center 
      ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();  //get the skeletons as an Arraylist of KSkeletons
         //individual joints
@@ -48,6 +66,10 @@ void draw() {
 popMatrix();
 fill(255, 0, 0);
 }
+
+
+
+// Kinect Methods
 
 //draw the body
 void drawBody(KJoint[] joints) 
