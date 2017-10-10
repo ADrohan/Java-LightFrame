@@ -19,12 +19,13 @@ static enum States {
 float esRad = 60.0;
 ArrayList<PVector> demoArray = new ArrayList<PVector>();
 States state = States.LIVE;
-
+PrintWriter output;
 
 void setup() {
   //Platform Setup
   fullScreen(P3D, 1);
   //size(400, 400);
+  output = createWriter("data.txt");
   
   //Kinect Setup
   kinect = new KinectPV2(this);
@@ -33,8 +34,6 @@ void setup() {
   kinect.enableSkeletonColorMap(true);
   kinect.enableColorImg(true);
   kinect.init();
-  
-  
 }
 
 void draw() {
@@ -51,23 +50,10 @@ void draw() {
       ellipse(mouseX, mouseY, esRad,esRad);
       break;
     case LIVE:
-      ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();  //get the skeletons as an Arraylist of KSkeletons
-      //individual joints
-      for (int i = 0; i < skeletonArray.size(); i++) {
-        KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
-        if (skeleton.isTracked()) {
-          KJoint[] joints = skeleton.getJoints();
-          color col  = skeleton.getIndexColor();
-          fill(255, 255, 255);
-          stroke(col);
-          drawBody(joints);
-          drawHandState(joints[KinectPV2.JointType_HandRight]);
-          drawHandState(joints[KinectPV2.JointType_HandLeft]);
-        }
-      }
+      mainKinect();
       break;
     case RECORD: 
-     //print("Record");
+      mainKinect();
       break;
     case PLAY: 
      //print("Play");
@@ -106,6 +92,33 @@ void mouseClicked() {
 }
 
 // Kinect Methods
+void mainKinect() {
+  ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonColorMap();  //get the skeletons as an Arraylist of KSkeletons
+  //individual joints
+  for (int i = 0; i < skeletonArray.size(); i++) {
+    KSkeleton skeleton = (KSkeleton) skeletonArray.get(i);
+    if (skeleton.isTracked()) {
+      KJoint[] joints = skeleton.getJoints();
+      color col  = skeleton.getIndexColor();
+      fill(0, 0, 0);
+      stroke(col);
+      drawBody(joints);
+      drawHandState(joints[KinectPV2.JointType_HandRight]);
+      drawHandState(joints[KinectPV2.JointType_HandLeft]);
+    }
+  }
+  if(state == States.RECORD) {
+    for(KSkeleton point : skeletonArray) {
+      KJoint[] joints =  point.getJoints();
+      output.print(joints[KinectPV2.JointType_HandRight].getX()+","+joints[KinectPV2.JointType_HandRight].getY());
+      output.print(":");
+      output.print(joints[KinectPV2.JointType_HandLeft].getX()+","+joints[KinectPV2.JointType_HandLeft].getY());
+      output.print("|");
+    }
+    output.println(" ");
+    // print to file
+  }
+}
 void drawBody(KJoint[] joints) {
   drawBone(joints, KinectPV2.JointType_HandRight, KinectPV2.JointType_HandRight);
   drawBone(joints, KinectPV2.JointType_Head, KinectPV2.JointType_Head);
