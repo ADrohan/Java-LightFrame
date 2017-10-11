@@ -13,19 +13,19 @@ static enum States {
   DEMO,
   LIVE,
   RECORD,
-  PLAY,
   PLAYING;
 }
 float esRad = 60.0;
 ArrayList<PVector> demoArray = new ArrayList<PVector>();
-States state = States.LIVE;
+ArrayList<ArrayList<PVector>> frames = new ArrayList<ArrayList<PVector>>();
+States state = States.DEMO;
 PrintWriter output;
+int frame = 0;
 
 void setup() {
   //Platform Setup
-  fullScreen(P3D, 1);
-  //size(400, 400);
-  output = createWriter("data.txt");
+  //fullScreen(P3D, 1);
+  size(400, 400);
   
   //Kinect Setup
   kinect = new KinectPV2(this);
@@ -55,30 +55,29 @@ void draw() {
     case RECORD: 
       mainKinect();
       break;
-    case PLAY: 
-     //print("Play");
-      break;
     case PLAYING:
-     //print("Playing");
+      
+      print("Playing");
       break;
   }
   popMatrix();
   fill(255, 0, 0);
 }
 
-public void keyPressed()
-{
+public void keyPressed(){
   if (key == 'd'){
     state = States.DEMO;
   }
   else if (key == 'l'){
+    demoArray = new ArrayList<PVector>();
     state = States.LIVE;
   }
   else if (key == 'r'){
+    output = createWriter("data.txt");
     state = States.RECORD;
   }
   else if (key == 'p'){
-    state = States.PLAY;
+    readFile("data.txt");
   }
   else if (key == 's'){
     state = States.LIVE;
@@ -90,6 +89,40 @@ void mouseClicked() {
     demoArray.add(new PVector(mouseX, mouseY));
   }
 }
+
+void readFile(String file) {
+  BufferedReader reader = createReader(file);
+  boolean fileEnd = false;
+  String line;
+  ArrayList<PVector> singleFrame = new ArrayList<PVector>();
+  while(!fileEnd) {
+    try {
+      line = reader.readLine();
+    } catch (IOException e) {
+      e.printStackTrace();
+      line = null;
+    }
+    if (line == null) {
+      fileEnd = true;
+    } else {
+      String[] persons = split(line, "|");
+      for(String person : persons) {
+        if(person.length() > 1){
+          String[] hands = split(person, ":");
+          for(String hand : hands) {
+            if(hand.length() > 1){
+              String[] points = split(hand, ",");
+              singleFrame.add(new PVector(float(points[0]),float(points[1])));
+            }
+          }
+        }
+      }
+      frames.add(singleFrame);
+    }
+  }
+  state = States.PLAYING;
+}
+
 
 // Kinect Methods
 void mainKinect() {
@@ -115,7 +148,7 @@ void mainKinect() {
       output.print(joints[KinectPV2.JointType_HandLeft].getX()+","+joints[KinectPV2.JointType_HandLeft].getY());
       output.print("|");
     }
-    output.println(" ");
+    output.println("");
     // print to file
   }
 }
