@@ -16,16 +16,19 @@ static enum States {
   PLAYING;
 }
 float esRad = 60.0;
-ArrayList<PVector> demoArray = new ArrayList<PVector>();
-ArrayList<ArrayList<PVector>> frames = new ArrayList<ArrayList<PVector>>();
-States state = States.DEMO;
+States state = States.LIVE;
 PrintWriter output;
 int frame = 0;
+int frameMultiplier = 60;
+
+ArrayList<PVector> demoArray = new ArrayList<PVector>();
+ArrayList<ArrayList<PVector>> frames = new ArrayList<ArrayList<PVector>>();
+
 
 void setup() {
   //Platform Setup
-  //fullScreen(P3D, 1);
-  size(400, 400);
+  fullScreen(P3D, 1);
+  //size(400, 400);
   
   //Kinect Setup
   kinect = new KinectPV2(this);
@@ -56,8 +59,16 @@ void draw() {
       mainKinect();
       break;
     case PLAYING:
-      
-      print("Playing");
+      if(frames.size() == frame) {
+        frame = 0;
+      } else {
+        fill(255, 255, 255);
+        ArrayList<PVector> temp = frames.get(int(frame));
+        for(PVector hand : temp) {
+          ellipse(hand.x, hand.y, esRad,esRad);
+        }
+        frame++;
+      }
       break;
   }
   popMatrix();
@@ -93,31 +104,39 @@ void mouseClicked() {
 void readFile(String file) {
   BufferedReader reader = createReader(file);
   boolean fileEnd = false;
-  String line;
+  String readIn;
   ArrayList<PVector> singleFrame = new ArrayList<PVector>();
   while(!fileEnd) {
     try {
-      line = reader.readLine();
+      readIn = reader.readLine();
     } catch (IOException e) {
       e.printStackTrace();
-      line = null;
+      readIn = null;
     }
-    if (line == null) {
+    if (readIn == null) {
       fileEnd = true;
     } else {
-      String[] persons = split(line, "|");
-      for(String person : persons) {
-        if(person.length() > 1){
-          String[] hands = split(person, ":");
-          for(String hand : hands) {
-            if(hand.length() > 1){
-              String[] points = split(hand, ",");
-              singleFrame.add(new PVector(float(points[0]),float(points[1])));
+      String[] lines = split(readIn, "$");
+      for(String line : lines) {
+        if(line.length() > 1){
+          println(line);
+          String[] persons = split(line, "|");
+          for(String person : persons) {
+            println(person);
+            String[] hands = split(person, ":");
+            for(String hand : hands) {
+              println(hand);
+              if(hand.length() > 1){
+                String[] points = split(hand, ",");
+                println(points[0]);
+                singleFrame.add(new PVector(float(points[0]),float(points[1])));
+              }
             }
           }
+          frames.add(singleFrame);
+          singleFrame = new ArrayList<PVector>();
         }
       }
-      frames.add(singleFrame);
     }
   }
   state = States.PLAYING;
@@ -141,15 +160,17 @@ void mainKinect() {
     }
   }
   if(state == States.RECORD) {
-    for(KSkeleton point : skeletonArray) {
-      KJoint[] joints =  point.getJoints();
+    int arraySize = skeletonArray.size();
+    for(int i = 0; i < arraySize; i++) {
+      KJoint[] joints =  skeletonArray.get(i).getJoints();
       output.print(joints[KinectPV2.JointType_HandRight].getX()+","+joints[KinectPV2.JointType_HandRight].getY());
       output.print(":");
       output.print(joints[KinectPV2.JointType_HandLeft].getX()+","+joints[KinectPV2.JointType_HandLeft].getY());
-      output.print("|");
+      if(i != (arraySize - 1)) {
+        output.print("|");
+      }
     }
-    output.println("");
-    // print to file
+    output.println("$");
   }
 }
 void drawBody(KJoint[] joints) {
@@ -173,7 +194,7 @@ void drawHandState(KJoint joint) {
   handState(joint.getState());
   pushMatrix();
   translate(joint.getX(), joint.getY(), joint.getZ());
-  ellipse(0, 0, 70, 70);
+  ellipse(0, 0, esRad, esRad);
   popMatrix();
 }
 
